@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8137:8137"
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=sqlite:///./data/todos.db
+      - PORT=8137
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend

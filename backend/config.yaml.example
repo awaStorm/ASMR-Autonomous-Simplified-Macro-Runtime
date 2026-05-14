@@ -1,0 +1,33 @@
+# 图片搜索 API 配置
+# 注意：敏感配置请从环境变量获取
+# 复制此文件为 config.yaml 并修改，或通过环境变量设置
+
+image_search:
+  # 百度图片搜索 API (第三方接口)
+  baidu:
+    api_url: ${BAIDU_API_URL:-https://cn.apihz.cn/api/img/apihzimgbaidu.php}
+    user_id: ${BAIDU_USER_ID:-}
+    api_key: ${BAIDU_API_KEY:-}
+
+  # Pexels API
+  pexels:
+    api_url: ${PEXELS_API_URL:-https://api.pexels.com/v1/search}
+    api_key: ${PEXELS_API_KEY:-}
+
+  # TheCatAPI
+  cat:
+    api_url: ${CAT_API_URL:-https://api.thecatapi.com/v1/images/search}
+    api_key: ${CAT_API_KEY:-}
+
+  # Lolicon API (二次元图片)
+  lolicon:
+    api_url: ${LOLICON_API_URL:-https://api.lolicon.app/setu/v2}
+
+  # 默认设置
+  defaults:
+    count: 3
+    max_count_per_source:
+      baidu: 10
+      pexels: 10
+      cat: 10
+      lolicon: 10

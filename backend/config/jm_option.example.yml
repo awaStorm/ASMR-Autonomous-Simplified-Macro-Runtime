@@ -1,0 +1,23 @@
+# JMComic 配置文件示例
+# 复制此文件为 jm_option.yml 并修改配置
+
+version: '2.0'
+dir_rule:
+  base_dir: data/jm/stock
+  rule: Bd_Atitle_Pindex
+client:
+  retry_times: 5
+download:
+  cache: true
+  image:
+    decode: true
+    suffix: .png
+  threading:
+    batch_count: 45
+plugins:
+  after_album:
+    - plugin: img2pdf
+      kwargs:
+        img_dir: data/jm/stock
+        pdf_dir: data/jm/pdf
+        filename_rule: Aid

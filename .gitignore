@@ -1,0 +1,69 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 虚拟环境
+venv/
+.venv/
+env/
+.env
+
+# 后端数据（重要：不要提交用户数据）
+backend/data/*.db
+backend/data/*.json
+backend/data/bili/
+backend/data/images/
+!backend/data/README.md
+
+# 后端配置（敏感信息）
+backend/config/jm_option.yml
+backend/config.yaml
+
+# 前端
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+
+# 外部数据目录（大文件、下载内容）
+data/jm/stock/
+data/jm/pdf/
+data/jm/covers/
+data/jm/*.json
+!data/jm/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日志
+*.log
+logs/
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 临时文件
+*.tmp
+*.bak
+*.pid
+
+# OS
+Thumbs.db

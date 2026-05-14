@@ -239,3 +239,49 @@ class ImageAPI:
                     return False, []
         except Exception:
             return False, []
+
+
+class ImageService:
+    """图片搜索服务"""
+
+    def __init__(self):
+        self.data_dir = Path(settings.data_dir)
+        self.deduplication = DeduplicationManager(self.data_dir / "image_search")
+
+    async def search_images(self, keyword: str, count: int, source: str = "baidu", r18: int = 0) -> List[str]:
+        """搜索图片"""
+        if source == "baidu":
+            success, urls = await ImageAPI.search_baidu(keyword, count)
+        elif source == "pexels":
+            success, urls = await ImageAPI.search_pexels(keyword, count)
+        elif source == "cat":
+            success, urls = await ImageAPI.get_random_cat(count)
+        elif source == "lolicon":
+            success, urls = await ImageAPI.search_lolicon(keyword, count, r18)
+        else:
+            success, urls = await ImageAPI.search_baidu(keyword, count)
+
+        if success and urls:
+            urls = self.deduplication.filter_duplicates(keyword, urls)
+            return urls[:count]
+        return []
+
+    async def get_cat_images(self, count: int = 3) -> List[str]:
+        """获取随机猫图"""
+        success, urls = await ImageAPI.get_random_cat(count)
+        if success and urls:
+            urls = self.deduplication.filter_duplicates("cat", urls)
+            return urls[:count]
+        return []
+
+    async def get_lolicon_images(self, keyword: str = "", count: int = 3, r18: int = 0) -> List[str]:
+        """获取Lolicon图片"""
+        success, urls = await ImageAPI.search_lolicon(keyword, count, r18)
+        if success and urls:
+            urls = self.deduplication.filter_duplicates(keyword, urls)
+            return urls[:count]
+        return []
+
+    def get_stats(self) -> Dict:
+        """获取统计信息"""
+        return self.deduplication.get_stats()

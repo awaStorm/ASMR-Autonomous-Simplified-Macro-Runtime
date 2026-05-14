@@ -1,4 +1,4 @@
-# ASMR
+# ASMR——Autonomous-Simplified-Macro-Runtime
 
 自简宏枢 - 将 QQ 机器人插件迁移到 Web 应用，保留业务逻辑，去除 QQ 依赖。
 
@@ -139,3 +139,13 @@ py -3.11 -m venv venv
 | `/api/jm` | 禁漫下载 |
 | `/api/agent` | 智能代理 |
 | `/api/click` | 点击统计 |
+
+## 鸣谢
+
+本项目有借用相关开源项目逻辑：
+
+- **[JMComic-Crawler-Python](https://github.com/hect0x7/JMComic-Crawler-Python)** (MIT License)
+  - 「禁漫下载」模块的核心逻辑来源于此项目
+  - 感谢 [hect0x7](https://github.com/hect0x7) 的出色工作
+
+> 其他依赖详见 `requirements.txt` 和 `package.json`

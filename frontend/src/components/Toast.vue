@@ -23,7 +23,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useSettings } from '../composables/useSettings'
 
+const { getSetting } = useSettings()
 const toasts = ref([])
 let toastId = 0
 
@@ -80,8 +82,18 @@ function handleAction(id, action) {
 }
 
 function confirm(message, options = {}) {
+  // 检查全局设置是否关闭操作确认
+  const showActionConfirm = getSetting('showActionConfirm', true)
+  if (!showActionConfirm) {
+    // 如果关闭了确认弹窗，直接返回 true（确认操作）
+    return Promise.resolve(true)
+  }
+  
+  // 添加提示信息
+  const messageWithTip = message + ' （可在设置中关掉提示）'
+  
   return new Promise((resolve) => {
-    showToast(message, {
+    showToast(messageWithTip, {
       type: options.type || 'warning',
       duration: options.duration || 5000, // 确认弹窗也使用 5 秒
       showActions: true,

@@ -11,6 +11,46 @@ import aiohttp
 
 from ..config import image_config, settings
 
+# 预设的 API URL（写死在代码中）
+PRESET_API_URLS = {
+    'baidu': 'https://cn.apihz.cn/api/img/apihzimgbaidu.php',
+    'pexels': 'https://api.pexels.com/v1/search',
+    'cat': 'https://api.thecatapi.com/v1/images/search',
+    'lolicon': 'https://api.lolicon.app/setu/v2'
+}
+
+# API 配置要求
+API_REQUIREMENTS = {
+    'baidu': {'needs_key': True, 'needs_user_id': True, 'needs_url': False},
+    'pexels': {'needs_key': True, 'needs_user_id': False, 'needs_url': False},
+    'cat': {'needs_key': False, 'needs_user_id': False, 'needs_url': False},
+    'lolicon': {'needs_key': False, 'needs_user_id': False, 'needs_url': False}
+}
+
+# API 配置文件路径
+API_CONFIG_FILE = Path(__file__).parent.parent.parent / "config" / "api_keys.json"
+
+
+def _load_api_keys_from_file() -> dict:
+    """从文件加载 API 密钥"""
+    if API_CONFIG_FILE.exists():
+        try:
+            with open(API_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def _save_api_keys_to_file(keys: dict):
+    """保存 API 密钥到文件"""
+    try:
+        API_CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(API_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(keys, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"保存 API 配置失败: {e}")
+
 
 def get_image_config() -> dict:
     """获取图片搜索配置"""
@@ -18,24 +58,73 @@ def get_image_config() -> dict:
 
 
 def get_source_config(source: str) -> dict:
-    """获取指定来源的配置，优先从环境变量读取敏感信息"""
+    """获取指定来源的配置，预设 URL，密钥从环境变量或配置文件获取"""
     config = get_image_config().get(source, {})
-    
-    # 优先从环境变量获取 API 密钥
+
+    # 设置预设的 API URL
+    config['api_url'] = PRESET_API_URLS.get(source, '')
+
+    # 从环境变量获取 API 密钥（优先级最高）
+    # 然后从配置文件获取
+    file_keys = _load_api_keys_from_file()
+
     if source == 'baidu':
-        config['api_key'] = os.getenv('BAIDU_API_KEY', config.get('api_key', ''))
-        config['user_id'] = os.getenv('BAIDU_USER_ID', config.get('user_id', ''))
-        config['api_url'] = os.getenv('BAIDU_API_URL', config.get('api_url', ''))
+        config['api_key'] = os.getenv('BAIDU_API_KEY', file_keys.get('baidu', {}).get('api_key', ''))
+        config['user_id'] = os.getenv('BAIDU_USER_ID', file_keys.get('baidu', {}).get('user_id', ''))
     elif source == 'pexels':
-        config['api_key'] = os.getenv('PEXELS_API_KEY', config.get('api_key', ''))
-        config['api_url'] = os.getenv('PEXELS_API_URL', config.get('api_url', ''))
+        config['api_key'] = os.getenv('PEXELS_API_KEY', file_keys.get('pexels', {}).get('api_key', ''))
     elif source == 'cat':
-        config['api_key'] = os.getenv('CAT_API_KEY', config.get('api_key', ''))
-        config['api_url'] = os.getenv('CAT_API_URL', config.get('api_url', ''))
-    elif source == 'lolicon':
-        config['api_url'] = os.getenv('LOLICON_API_URL', config.get('api_url', ''))
-    
+        config['api_key'] = os.getenv('CAT_API_KEY', file_keys.get('cat', {}).get('api_key', ''))
+    # Lolicon 不需要 API Key
+
     return config
+
+
+def get_saved_api_keys() -> dict:
+    """获取已保存的 API 密钥（用于前端显示）"""
+    return _load_api_keys_from_file()
+
+
+def set_api_key(source: str, api_key: str = "", user_id: str = "") -> bool:
+    """设置 API 密钥"""
+    try:
+        keys = _load_api_keys_from_file()
+
+        if source not in keys:
+            keys[source] = {}
+
+        if api_key:
+            keys[source]['api_key'] = api_key
+        if user_id:
+            keys[source]['user_id'] = user_id
+
+        _save_api_keys_to_file(keys)
+        return True
+    except Exception:
+        return False
+
+
+def check_api_config(source: str) -> Dict[str, str]:
+    """检查 API 配置是否完整，返回错误信息"""
+    config = get_source_config(source)
+    requirements = API_REQUIREMENTS.get(source, {})
+    errors = []
+
+    # 检查 URL（虽然预设了，但还是检查一下）
+    if requirements.get('needs_url', False) and not config.get('api_url'):
+        errors.append('API URL 未配置')
+    elif not config.get('api_url'):
+        errors.append('API URL 未配置')
+
+    # 检查密钥
+    if requirements.get('needs_key', False) and not config.get('api_key'):
+        errors.append('API Key 未配置')
+
+    # 检查用户ID
+    if requirements.get('needs_user_id', False) and not config.get('user_id'):
+        errors.append('User ID 未配置')
+
+    return errors
 
 
 class DeduplicationManager:
@@ -190,18 +279,21 @@ class ImageAPI:
 
     @staticmethod
     async def get_random_cat(count: int = 1) -> Tuple[bool, List[str]]:
-        """获取随机猫图"""
+        """获取随机猫图（公共API，无需密钥）"""
         config = get_source_config('cat')
         api_url = config.get('api_url')
         api_key = config.get('api_key')
 
-        if not all([api_url, api_key]):
+        if not api_url:
             return False, []
 
         params = {
-            "limit": min(count, 100),
-            "api_key": api_key
+            "limit": min(count, 100)
         }
+
+        # 只有当有 API Key 时才添加（无密钥时使用演示模式）
+        if api_key:
+            params["api_key"] = api_key
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -224,17 +316,25 @@ class ImageAPI:
             return False, []
 
         params = {
-            "keyword": keyword,
-            "num": min(count, 10),
-            "r18": r18
+            "r18": r18,
+            "num": min(count, 10)
         }
+
+        if keyword:
+            params["tag[]"] = keyword
 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(api_url, params=params, timeout=10) as resp:
                     if resp.status == 200:
                         data = await resp.json()
-                        urls = [item.get('url') for item in data.get('data', []) if item.get('url')]
+                        # 检查 API 返回的 error 字段
+                        if data.get('error') != "":
+                            return False, []
+                        # 正确解析 urls.original
+                        urls = [item.get('urls', {}).get('original')
+                                for item in data.get('data', [])
+                                if item.get('urls', {}).get('original')]
                         return True, urls
                     return False, []
         except Exception:

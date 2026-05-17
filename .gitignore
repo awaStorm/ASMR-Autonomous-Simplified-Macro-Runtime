@@ -19,15 +19,13 @@ env/
 .env
 
 # 后端数据（重要：不要提交用户数据）
-backend/data/*.db
-backend/data/*.json
-backend/data/bili/
-backend/data/images/
+backend/data/
 !backend/data/README.md
 
 # 后端配置（敏感信息）
 backend/config/jm_option.yml
 backend/config.yaml
+backend/config/api_keys.json
 
 # 前端
 node_modules/

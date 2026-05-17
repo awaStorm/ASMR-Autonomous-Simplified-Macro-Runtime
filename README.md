@@ -45,6 +45,7 @@ ASMR/
 │   └── jm/          # 禁漫数据
 ├── scripts/
 │   └── migrate_db.py # 数据库迁移脚本
+├── One_Key_Start.bat # 一键启动脚本（小白专用）
 └── docker-compose.yml
 ```
 
@@ -54,7 +55,7 @@ ASMR/
 
 - **主页** - 显示一言随机语录，带打字机动画效果
 - **待办事项** - 待办列表的增删改查，支持优先级排序和状态筛选
-- **图片搜索** - 基于图片内容的搜索功能
+- **图片搜索** - 基于图片内容的搜索功能，支持百度图片、Pexels、猫图、Lolicon
 - **B站监控** - 监控 B 站 UP 主更新并推送通知
 - **禁漫下载** - 下载和管理 COMIC 资源 插件原作者友情提醒：珍爱JM，为了减轻JM的服务器压力，请不要一次性爬取太多本子，西门🙏🙏🙏.
 - **喵喵喵** - 娱乐模块
@@ -69,7 +70,34 @@ ASMR/
 
 ## 快速开始
 
-### 1. 数据库准备
+### 🌟 小白专用：一键启动（推荐）
+
+如果你不想手动配置环境，直接双击根目录下的 `One_Key_Start.bat` 文件即可！
+
+**使用步骤：**
+
+1. **安装必备软件**（只需安装一次）：
+   - 安装 [Node.js 18+](https://nodejs.org/)
+   - 安装 [Python 3.11+](https://www.python.org/)
+
+2. **双击启动**：
+   - 找到项目根目录下的 `One_Key_Start.bat` 文件
+   - 双击运行，脚本会自动：
+     - ✅ 检查 Node.js 和 Python 是否安装
+     - ✅ 打开后端服务窗口（端口 8137）
+     - ✅ 打开前端服务窗口（端口 5173）
+     - ✅ 自动打开 Edge 浏览器访问前端页面
+
+3. **使用完毕**：
+   - 直接关闭所有打开的窗口即可停止服务
+
+**注意：** 首次启动时，由于需要下载依赖，可能需要等待几分钟。后续启动会更快。
+
+---
+
+### 手动启动方式
+
+#### 1. 数据库准备
 
 数据库文件位于 `backend/data/todos.db`，首次启动时会自动创建表结构。
 
@@ -83,7 +111,7 @@ python scripts/migrate_db.py
 python scripts/migrate_db.py /path/to/old/todos.db
 ```
 
-### 2. 启动后端
+#### 2. 启动后端
 
 ```powershell
 cd backend
@@ -105,7 +133,7 @@ python -m uvicorn app.main:app --reload --port 8137
 
 访问 http://localhost:8137/docs 查看 API 文档
 
-### 3. 启动前端
+#### 3. 启动前端
 
 ```powershell
 cd frontend
@@ -129,12 +157,20 @@ py -0
 py -3.11 -m venv venv
 ```
 
+### 一键启动脚本问题
+
+如果双击 `One_Key_Start.bat` 没有反应或报错：
+
+1. 检查是否已安装 Node.js 和 Python
+2. 确保命令行可以正常运行 `node -v` 和 `python --version`
+3. 如果提示端口被占用，可以尝试重启电脑后再试
+
 ## API 端点
 
 | 路径 | 描述 |
 |------|------|
 | `/api/todos` | 待办事项 CRUD |
-| `/api/images` | 图片搜索 |
+| `/api/images` | 图片搜索（支持百度、Pexels、猫图、Lolicon） |
 | `/api/bili` | B站监控 |
 | `/api/jm` | 禁漫下载 |
 | `/api/agent` | 智能代理 |

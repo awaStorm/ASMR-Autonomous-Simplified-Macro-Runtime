@@ -1,10 +1,13 @@
 """图片搜索API"""
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Form
 from fastapi.responses import Response
-from typing import List, Optional
+from typing import List, Optional, Dict
 import httpx
 
-from ..services.image_service import ImageService
+from ..services.image_service import (
+    ImageService, check_api_config, API_REQUIREMENTS, PRESET_API_URLS,
+    set_api_key, get_saved_api_keys
+)
 
 router = APIRouter()
 image_service = ImageService()
@@ -62,3 +65,58 @@ async def proxy_image(url: str):
             )
     except Exception as e:
         return Response(content=str(e), status_code=500)
+
+
+@router.get("/config/status")
+async def get_config_status() -> Dict[str, Dict]:
+    """获取各图片源的配置状态"""
+    status = {}
+    saved_keys = get_saved_api_keys()
+
+    for source in API_REQUIREMENTS.keys():
+        errors = check_api_config(source)
+        has_saved_key = source in saved_keys and (
+            saved_keys[source].get('api_key') or saved_keys[source].get('user_id')
+        )
+
+        status[source] = {
+            'configured': len(errors) == 0,
+            'errors': errors,
+            'requires_key': API_REQUIREMENTS[source]['needs_key'],
+            'requires_user_id': API_REQUIREMENTS[source]['needs_user_id'],
+            'api_url': PRESET_API_URLS[source],
+            'has_saved_key': has_saved_key
+        }
+    return status
+
+
+@router.post("/config/set")
+async def set_api_config_api(
+    source: str = Form(...),
+    api_key: str = Form(""),
+    user_id: str = Form("")
+):
+    """设置图片源的 API 密钥（持久化到文件）"""
+    if source not in API_REQUIREMENTS:
+        return {"success": False, "message": "未知的图片源"}
+
+    success = set_api_key(source, api_key, user_id)
+
+    if success:
+        return {"success": True, "message": "配置已保存", "source": source}
+    else:
+        return {"success": False, "message": "保存失败"}
+
+
+@router.get("/config/requirements")
+async def get_api_requirements() -> Dict[str, Dict]:
+    """获取各图片源的配置要求"""
+    requirements = {}
+    for source, req in API_REQUIREMENTS.items():
+        requirements[source] = {
+            'needs_key': req['needs_key'],
+            'needs_user_id': req['needs_user_id'],
+            'needs_url': req['needs_url'],
+            'api_url': PRESET_API_URLS[source]
+        }
+    return requirements

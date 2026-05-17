@@ -1,6 +1,12 @@
 <template>
   <div id="app">
-    <div class="app-layout">
+    <!-- 设置页面特殊布局 -->
+    <div v-if="isSettingPage" class="setting-layout">
+      <router-view />
+    </div>
+    
+    <!-- 普通页面布局 -->
+    <div v-else class="app-layout">
       <!-- 侧边栏 -->
       <Sidebar />
       
@@ -16,10 +22,16 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import { useTheme } from './composables/useTheme'
 
 useTheme()
+
+const route = useRoute()
+
+const isSettingPage = computed(() => route.path === '/setting')
 </script>
 
 <style scoped>
@@ -45,5 +57,11 @@ useTheme()
 /* 内容容器 */
 .content-wrapper {
   padding: 30px 40px;
+}
+
+/* 设置页面布局 */
+.setting-layout {
+  min-height: 100vh;
+  background-color: var(--bg-page);
 }
 </style>

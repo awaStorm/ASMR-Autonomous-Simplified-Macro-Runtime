@@ -35,6 +35,12 @@ const routes = [
     path: '/setting',
     name: 'setting',
     component: () => import('../views/SettingView.vue')
+  },
+  // 404 页面 - 必须放在最后
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'notFound',
+    component: () => import('../views/NotFoundView.vue')
   }
 ]
 
